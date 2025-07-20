@@ -99,25 +99,30 @@ def main():
         for i, persona in enumerate(personas):
             color = colores_por_persona.get(persona, "#cccccc")
             with cols[i % 3]:
-                css = f"""
-                <style>
-                .button-{persona} > button {{
-                    background-color: {color};
-                    color: white;
-                    width: 100%;
-                    border-radius: 8px;
-                    margin: 5px 0;
-                }}
-                </style>
-                """
-                st.markdown(css, unsafe_allow_html=True)
-                if st.button(f"Votar por {persona}", key=persona):
+                st.markdown(
+                    f"""
+                    <style>
+                    div[data-testid="stButton"][key="vote_{persona}"] button {{
+                        background-color: {color} !important;
+                        color: white !important;
+                        width: 100%;
+                        border-radius: 8px;
+                        margin: 6px 0;
+                        border: none;
+                        padding: 0.5rem 1rem;
+                        font-weight: bold;
+                    }}
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+                if st.button(f"{persona}", key=f"vote_{persona}"):
                     votos[hoy]["resultados"].setdefault(persona, 0)
                     votos[hoy]["resultados"][persona] += 1
                     votos[hoy]["jugadores"].append({"nombre": nombre, "voto": persona})
                     guardar_json(VOTOS_PATH, votos)
                     st.success(f"🎉 Has votado por {persona}!")
-                    st.stop()
+                    st.experimental_rerun()
 
     if resultados:
         st.markdown("---")
@@ -134,10 +139,10 @@ def main():
             """, unsafe_allow_html=True)
 
         st.markdown("---")
-        st.subheader("🗒 Quién votó a quién:")
+        st.subheader("🧾 Quién votó a quién:")
         for entry in registro:
             if isinstance(entry, dict):
-                st.markdown(f"🧐 **{entry['nombre']}** votó por **{entry['voto']}**")
+                st.markdown(f"🧍 **{entry['nombre']}** votó por **{entry['voto']}**")
 
     with st.expander("🛠️ Admin: Resetear el juego"):
         if st.button("🧼 Borrar votos y preguntas usadas"):

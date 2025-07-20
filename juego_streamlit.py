@@ -8,6 +8,7 @@ import os
 PREGUNTAS_PATH = "preguntas.json"
 USADAS_PATH = "usadas.json"
 VOTOS_PATH = "votos.json"
+JUGADORES_PATH = "jugadores.json"
 
 # Funciones utilitarias
 def cargar_json(path, default):
@@ -27,8 +28,10 @@ def elegir_pregunta(preguntas, usadas):
         return None, None
     return random.choice(restantes)
 
+jugadores = cargar_json(JUGADORES_PATH, [])
+
 def main():
-    st.set_page_config(page_title="Pregunta del Día", page_icon="🎲", layout="centered")
+    st.set_page_config(page_title="Pregunta del Día", page_icon="🏉", layout="centered")
     st.title("🎲 Pregunta del Día")
 
     preguntas = cargar_json(PREGUNTAS_PATH, {})
@@ -56,8 +59,9 @@ def main():
         resultados = {}
         jugadores = []
 
-    st.markdown(f"### ❓ {pregunta}")
-    nombre = st.text_input("👤 Escribe tu nombre para votar:")
+    st.markdown(f"### {pregunta}")
+    nombre = st.selectbox("👤 Selecciona tu nombre para votar:", jugadores)
+
 
     personas = list(preguntas.keys())
 
@@ -69,17 +73,25 @@ def main():
             if st.button("✅ Votar"):
                 votos[hoy]["resultados"].setdefault(seleccion, 0)
                 votos[hoy]["resultados"][seleccion] += 1
-                votos[hoy]["jugadores"].append(nombre)
+                votos[hoy]["jugadores"].append({"nombre": nombre, "voto": seleccion})
                 guardar_json(VOTOS_PATH, votos)
                 st.success(f"Has votado por {seleccion} ✅")
 
     if resultados:
-        st.markdown("### 📊 Resultados:")
-        for persona, count in resultados.items():
-            st.write(f"- {persona}: {count} voto(s)")
+      st.markdown("### Resultados:")
+      total_votos = sum(resultados.values())
+
+    for persona, count in resultados.items():
+        porcentaje = round((count / total_votos) * 100, 1)
+        st.write(f"- {persona}: {count} voto(s) ({porcentaje}%)")
+
+    st.markdown("### Quién votó a quién:")
+    for entry in votos[hoy]["jugadores"]:
+        st.write(f"- {entry['nombre']} votó por {entry['voto']}")
+
 
     st.markdown("---")
-    st.caption("Creado por tu grupo 🧠")
+    st.caption("Creado por tu grupo ")
 
 if __name__ == "__main__":
     main()

@@ -70,42 +70,51 @@ def main():
 
     st.markdown(f"### ❓ {pregunta}")
 
-    # Selector de nombre desde jugadores.json
-    nombre = st.selectbox("👤 Selecciona tu nombre para votar:", jugadores)
+    # Nombre del votante (sin preselección)
+    nombre = st.selectbox("👤 Selecciona tu nombre para votar:", ["-- Elige tu nombre --"] + jugadores)
 
-    if nombre:
-        ya_voto = any(
-            (entry["nombre"] == nombre if isinstance(entry, dict) else entry == nombre)
-            for entry in registro
-        )
-        if ya_voto:
-            st.info("✅ Ya has votado hoy.")
-        else:
-            seleccion = st.radio("¿A quién votas?", personas)
-            if st.button("✅ Votar"):
-                votos[hoy]["resultados"].setdefault(seleccion, 0)
-                votos[hoy]["resultados"][seleccion] += 1
-                votos[hoy]["jugadores"].append({"nombre": nombre, "voto": seleccion})
+    if nombre == "-- Elige tu nombre --":
+        st.warning("⚠️ Por favor, selecciona tu nombre antes de votar.")
+        return
+
+    # Verificar si ya ha votado
+    ya_voto = any(
+        (entry["nombre"] == nombre if isinstance(entry, dict) else entry == nombre)
+        for entry in registro
+    )
+
+    if ya_voto:
+        st.info("✅ Ya has votado hoy, no hagas trampas, va por ti Juanlu")
+    else:
+        st.markdown("### 👇 Haz clic en la persona que quieres votar:")
+        for persona in personas:
+            if st.button(f"🗳️ Votar por {persona}", key=persona):
+                votos[hoy]["resultados"].setdefault(persona, 0)
+                votos[hoy]["resultados"][persona] += 1
+                votos[hoy]["jugadores"].append({"nombre": nombre, "voto": persona})
                 guardar_json(VOTOS_PATH, votos)
-                st.success(f"🎉 Has votado por {seleccion}!")
+                st.success(f"🎉 Has votado por {persona}!")
+                st.stop()
 
     # Mostrar resultados
     if resultados:
-        st.markdown("### 📊 Resultados:")
+        st.markdown("---")
+        st.subheader("📊 Resultados:")
         total = sum(resultados.values())
         for persona, count in resultados.items():
-           pct = (count / total) * 100 if total > 0 else 0
-           st.markdown(f"**{persona}** — {count} voto(s) ({pct:.1f}%)")
-           st.progress(pct / 100)
+            pct = (count / total) * 100 if total > 0 else 0
+            st.markdown(f"**{persona}** — {count} voto(s) ({pct:.1f}%)")
+            st.progress(pct / 100)
 
-
-        st.markdown("### 👁️ Quién votó a quién:")
+        st.markdown("---")
+        st.subheader("🧾 Quién votó a quién:")
         for entry in registro:
             if isinstance(entry, dict):
-                st.write(f"- {entry['nombre']} votó por {entry['voto']}")
+                st.markdown(f"🧍 **{entry['nombre']}** votó por **{entry['voto']}**")
             elif isinstance(entry, str):
-                st.write(f"- {entry} (voto antiguo sin destino)")
-    
+                st.markdown(f"⚠️ {entry} (voto antiguo sin destino)")
+
+    # Admin: Reset
     with st.expander("🛠️ Admin: Resetear el juego"):
         if st.button("🧼 Borrar votos y preguntas usadas"):
             guardar_json(VOTOS_PATH, {})
@@ -114,4 +123,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-  

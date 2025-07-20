@@ -42,7 +42,7 @@ def main():
 
     # Filtrar personas que sí tienen preguntas
     preguntas = {k: v for k, v in preguntas_raw.items() if v}
-    personas = list(preguntas.keys())
+    personas = jugadores
 
     # Obtener fecha actual
     hoy = datetime.date.today().isoformat()

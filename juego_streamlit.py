@@ -94,8 +94,10 @@ def main():
         st.markdown("### 📊 Resultados:")
         total = sum(resultados.values())
         for persona, count in resultados.items():
-            pct = (count / total) * 100 if total > 0 else 0
-            st.write(f"- {persona}: {count} votos ({pct:.1f}%)")
+           pct = (count / total) * 100 if total > 0 else 0
+           st.markdown(f"**{persona}** — {count} voto(s) ({pct:.1f}%)")
+           st.progress(pct / 100)
+
 
         st.markdown("### 👁️ Quién votó a quién:")
         for entry in registro:

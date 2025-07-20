@@ -93,9 +93,8 @@ def main():
 
     # Permite forzar refresco tras votar
     if st.session_state.get("ya_votado"):
-       st.session_state["ya_votado"] = False
-       st.experimental_rerun()
-
+        st.session_state["ya_votado"] = False
+        st.stop()
 
     if ya_voto:
         st.info("✅ Ya has votado hoy, no hagas trampas, va por ti Juanlu")
@@ -108,7 +107,7 @@ def main():
                 st.markdown(
                     f"""
                     <style>
-                    div[data-testid="stButton"][key="vote_{persona}"] button {{
+                    div[data-testid=\"stButton\"][key=\"vote_{persona}\"] button {{
                         background-color: {color} !important;
                         color: white !important;
                         width: 100%;
@@ -130,7 +129,6 @@ def main():
                     st.success(f"🎉 Has votado por {persona}!")
                     st.session_state["ya_votado"] = True
                     st.stop()
-
 
     if resultados:
         st.markdown("---")

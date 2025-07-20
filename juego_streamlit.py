@@ -103,6 +103,13 @@ def main():
                 st.write(f"- {entry['nombre']} votó por {entry['voto']}")
             elif isinstance(entry, str):
                 st.write(f"- {entry} (voto antiguo sin destino)")
+    
+    with st.expander("🛠️ Admin: Resetear el juego"):
+        if st.button("🧼 Borrar votos y preguntas usadas"):
+            guardar_json(VOTOS_PATH, {})
+            guardar_json(USADAS_PATH, [])
+            st.success("✅ Juego reiniciado correctamente.")
 
 if __name__ == "__main__":
     main()
+  

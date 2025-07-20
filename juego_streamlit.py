@@ -139,11 +139,22 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
 
+        from collections import defaultdict
+
         st.markdown("---")
         st.subheader("🧾 Quién votó a quién:")
+
+        # Agrupar por persona votada
+        votado_por = defaultdict(list)
         for entry in registro:
-            if isinstance(entry, dict):
-                st.markdown(f"🧍 **{entry['nombre']}** votó por **{entry['voto']}**")
+           if isinstance(entry, dict):
+               votado_por[entry["voto"]].append(entry["nombre"])
+
+        # Mostrar agrupado
+        for votado, votantes in votado_por.items():
+            lista_votantes = ", ".join(votantes)
+            st.markdown(f"- **{votado}**: votado por {lista_votantes}")
+
 
     with st.expander("🛠️ Admin: Resetear el juego"):
         if st.button("🧼 Borrar votos y preguntas usadas"):

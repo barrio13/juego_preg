@@ -122,7 +122,8 @@ def main():
                     votos[hoy]["jugadores"].append({"nombre": nombre, "voto": persona})
                     guardar_json(VOTOS_PATH, votos)
                     st.success(f"🎉 Has votado por {persona}!")
-                    st.experimental_rerun()
+                    st.rerun()
+
 
     if resultados:
         st.markdown("---")

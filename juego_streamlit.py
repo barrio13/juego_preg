@@ -91,11 +91,6 @@ def main():
 
     ya_voto = any((entry["nombre"] == nombre if isinstance(entry, dict) else entry == nombre) for entry in registro)
 
-    # Permite forzar refresco tras votar
-    if st.session_state.get("ya_votado"):
-        st.session_state["ya_votado"] = False
-        st.stop()
-
     if ya_voto:
         st.info("✅ Ya has votado hoy, no hagas trampas, va por ti Juanlu")
     else:
@@ -127,8 +122,7 @@ def main():
                     votos[hoy]["jugadores"].append({"nombre": nombre, "voto": persona})
                     guardar_json(VOTOS_PATH, votos)
                     st.success(f"🎉 Has votado por {persona}!")
-                    st.session_state["ya_votado"] = True
-                    st.stop()
+                    st.experimental_rerun()
 
     if resultados:
         st.markdown("---")

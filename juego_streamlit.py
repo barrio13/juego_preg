@@ -4,13 +4,13 @@ import random
 import datetime
 import os
 
-# Paths
+# Rutas de archivos
 PREGUNTAS_PATH = "preguntas.json"
 USADAS_PATH = "usadas.json"
 VOTOS_PATH = "votos.json"
 JUGADORES_PATH = "jugadores.json"
 
-# Funciones utilitarias
+# Funciones para leer y guardar JSON
 def cargar_json(path, default):
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
@@ -21,6 +21,7 @@ def guardar_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+# Elegir pregunta aleatoria no usada
 def elegir_pregunta(preguntas, usadas):
     todas = [(autor, p) for autor, ps in preguntas.items() for p in ps]
     restantes = [p for p in todas if p[1] not in usadas]
@@ -28,21 +29,29 @@ def elegir_pregunta(preguntas, usadas):
         return None, None
     return random.choice(restantes)
 
-jugadores = cargar_json(JUGADORES_PATH, [])
-
+# Función principal de la app
 def main():
     st.set_page_config(page_title="Pregunta del Día", page_icon="🏉", layout="centered")
-    st.title("🎲 Pregunta del Día")
+    st.title("🏉 Pregunta del Día")
 
-    preguntas = cargar_json(PREGUNTAS_PATH, {})
+    # Cargar datos
+    preguntas_raw = cargar_json(PREGUNTAS_PATH, {})
+    jugadores = cargar_json(JUGADORES_PATH, [])
     usadas = cargar_json(USADAS_PATH, [])
     votos = cargar_json(VOTOS_PATH, {})
 
+    # Filtrar personas que sí tienen preguntas
+    preguntas = {k: v for k, v in preguntas_raw.items() if v}
+    personas = list(preguntas.keys())
+
+    # Obtener fecha actual
     hoy = datetime.date.today().isoformat()
+
+    # Recuperar o generar la pregunta del día
     if hoy in votos:
         pregunta = votos[hoy]["pregunta"]
         resultados = votos[hoy]["resultados"]
-        jugadores = votos[hoy].get("jugadores", [])
+        registro = votos[hoy].get("jugadores", [])
     else:
         autor, pregunta = elegir_pregunta(preguntas, usadas)
         if not pregunta:
@@ -57,17 +66,20 @@ def main():
         guardar_json(USADAS_PATH, usadas)
         guardar_json(VOTOS_PATH, votos)
         resultados = {}
-        jugadores = []
+        registro = []
 
-    st.markdown(f"### {pregunta}")
+    st.markdown(f"### ❓ {pregunta}")
+
+    # Selector de nombre desde jugadores.json
     nombre = st.selectbox("👤 Selecciona tu nombre para votar:", jugadores)
 
-
-    personas = list(preguntas.keys())
-
     if nombre:
-        if nombre in jugadores:
-            st.info("Ya has votado hoy. ¡Gracias!")
+        ya_voto = any(
+            (entry["nombre"] == nombre if isinstance(entry, dict) else entry == nombre)
+            for entry in registro
+        )
+        if ya_voto:
+            st.info("✅ Ya has votado hoy.")
         else:
             seleccion = st.radio("¿A quién votas?", personas)
             if st.button("✅ Votar"):
@@ -75,23 +87,22 @@ def main():
                 votos[hoy]["resultados"][seleccion] += 1
                 votos[hoy]["jugadores"].append({"nombre": nombre, "voto": seleccion})
                 guardar_json(VOTOS_PATH, votos)
-                st.success(f"Has votado por {seleccion} ✅")
+                st.success(f"🎉 Has votado por {seleccion}!")
 
+    # Mostrar resultados
     if resultados:
-      st.markdown("### Resultados:")
-      total_votos = sum(resultados.values())
+        st.markdown("### 📊 Resultados:")
+        total = sum(resultados.values())
+        for persona, count in resultados.items():
+            pct = (count / total) * 100 if total > 0 else 0
+            st.write(f"- {persona}: {count} votos ({pct:.1f}%)")
 
-    for persona, count in resultados.items():
-        porcentaje = round((count / total_votos) * 100, 1)
-        st.write(f"- {persona}: {count} voto(s) ({porcentaje}%)")
-
-    st.markdown("### Quién votó a quién:")
-    for entry in votos[hoy]["jugadores"]:
-        st.write(f"- {entry['nombre']} votó por {entry['voto']}")
-
-
-    st.markdown("---")
-    st.caption("Creado por tu grupo ")
+        st.markdown("### 👁️ Quién votó a quién:")
+        for entry in registro:
+            if isinstance(entry, dict):
+                st.write(f"- {entry['nombre']} votó por {entry['voto']}")
+            elif isinstance(entry, str):
+                st.write(f"- {entry} (voto antiguo sin destino)")
 
 if __name__ == "__main__":
     main()
